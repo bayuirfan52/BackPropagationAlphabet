@@ -33,6 +33,12 @@ public interface BackPropagationInterface {
          * @param logData
          */
         void showLogData(String logData);
+        
+        /**
+         * Show result into your label form
+         * @param result 
+         */
+        void showResult(String result);
 
         /**
          * Set your presenter in your Form

@@ -440,4 +440,16 @@ public class AlphabetLibrary {
             -1,-1,-1,-1,-1,-1
         }
     };
+    
+    /**
+     * A Array Variable to set Status if the program know at the alphabet pattern
+     */
+    public static final String[] ALPHABET_STATUS = {
+        "A","B","C","D","E",
+        "F","G","H","I","J",
+        "K","L","M","N","O",
+        "P","Q","R","S","T",
+        "U","V","W","X","Y",
+        "Z"
+    };
 }

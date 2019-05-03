@@ -36,7 +36,6 @@ public class MainForm extends javax.swing.JFrame implements BackPropagationInter
     private javax.swing.JButton aButton;
     private javax.swing.JTextField alphaField;
     private javax.swing.JButton bButton;
-    private javax.swing.JLabel biasValue;
     private javax.swing.JButton cButton;
     private javax.swing.JButton clearButton;
     private javax.swing.JButton dButton;
@@ -50,7 +49,6 @@ public class MainForm extends javax.swing.JFrame implements BackPropagationInter
     private javax.swing.JButton iButton;
     private javax.swing.JButton jButton;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -62,9 +60,9 @@ public class MainForm extends javax.swing.JFrame implements BackPropagationInter
     private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTabbedPane jTabbedPane1;
-    private javax.swing.JTextArea jTextArea1;
     private javax.swing.JButton kButton;
     private javax.swing.JButton lButton;
+    private javax.swing.JTextArea logDataField;
     private javax.swing.JButton mButton;
     private javax.swing.JButton nButton;
     private javax.swing.JButton oButton;
@@ -276,7 +274,7 @@ public class MainForm extends javax.swing.JFrame implements BackPropagationInter
         pattern17 = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
-        jTextArea1 = new javax.swing.JTextArea();
+        logDataField = new javax.swing.JTextArea();
         jLabel2 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
@@ -290,8 +288,6 @@ public class MainForm extends javax.swing.JFrame implements BackPropagationInter
         jLabel8 = new javax.swing.JLabel();
         errorValue = new javax.swing.JLabel();
         epochValue = new javax.swing.JLabel();
-        jLabel13 = new javax.swing.JLabel();
-        biasValue = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Backpropagation Alphabet");
@@ -306,6 +302,11 @@ public class MainForm extends javax.swing.JFrame implements BackPropagationInter
         });
 
         testButton.setText("TEST");
+        testButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                testButtonActionPerformed(evt);
+            }
+        });
 
         jLabel1.setText("Hasil :");
 
@@ -859,9 +860,10 @@ public class MainForm extends javax.swing.JFrame implements BackPropagationInter
 
         jTabbedPane1.addTab("Testing", jPanel1);
 
-        jTextArea1.setColumns(20);
-        jTextArea1.setRows(5);
-        jScrollPane1.setViewportView(jTextArea1);
+        logDataField.setEditable(false);
+        logDataField.setColumns(20);
+        logDataField.setRows(1000);
+        jScrollPane1.setViewportView(logDataField);
 
         jLabel2.setText("Alpha");
 
@@ -889,7 +891,7 @@ public class MainForm extends javax.swing.JFrame implements BackPropagationInter
 
         jLabel6.setText("Training Process Log");
 
-        jLabel7.setText("Error Value");
+        jLabel7.setText("Max Error Value");
 
         jLabel8.setText("Epoch on Training");
 
@@ -897,59 +899,44 @@ public class MainForm extends javax.swing.JFrame implements BackPropagationInter
 
         epochValue.setText("0");
 
-        jLabel13.setText("Bias on Random");
-
-        biasValue.setText("0");
-
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel4)
+                    .addComponent(jLabel2)
+                    .addComponent(jLabel3))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel2Layout.createSequentialGroup()
-                                .addContainerGap()
-                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jLabel4)
-                                    .addComponent(jLabel2)
-                                    .addComponent(jLabel3))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
-                                .addContainerGap(215, Short.MAX_VALUE)
-                                .addComponent(stopButton, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(21, 21, 21)))
+                        .addComponent(stopButton, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(21, 21, 21)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(trainButton, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                .addComponent(alphaField, javax.swing.GroupLayout.DEFAULT_SIZE, 166, Short.MAX_VALUE)
+                                .addComponent(alphaField)
                                 .addComponent(toleranceField)
-                                .addComponent(epochField))))
+                                .addComponent(epochField, javax.swing.GroupLayout.PREFERRED_SIZE, 166, javax.swing.GroupLayout.PREFERRED_SIZE))))
                     .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGap(215, 215, 215)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel2Layout.createSequentialGroup()
-                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jLabel7)
-                                    .addComponent(jLabel8))
-                                .addGap(28, 28, 28)
-                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(errorValue)
-                                    .addComponent(epochValue)))
-                            .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addGroup(jPanel2Layout.createSequentialGroup()
-                                    .addGap(152, 152, 152)
-                                    .addComponent(biasValue))
-                                .addComponent(jLabel13)))))
+                            .addComponent(jLabel7)
+                            .addComponent(jLabel8))
+                        .addGap(28, 28, 28)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(errorValue)
+                            .addComponent(epochValue))))
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGap(21, 21, 21)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(18, 18, 18)
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 373, Short.MAX_VALUE)
+                        .addContainerGap())
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jLabel6)
-                        .addGap(56, 56, 56))))
+                        .addGap(127, 127, 127))))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -959,7 +946,7 @@ public class MainForm extends javax.swing.JFrame implements BackPropagationInter
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(jLabel6)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jScrollPane1))
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 310, Short.MAX_VALUE))
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel2)
@@ -984,11 +971,7 @@ public class MainForm extends javax.swing.JFrame implements BackPropagationInter
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel8)
                             .addComponent(epochValue))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel13)
-                            .addComponent(biasValue))
-                        .addGap(0, 93, Short.MAX_VALUE)))
+                        .addGap(0, 122, Short.MAX_VALUE)))
                 .addContainerGap())
         );
 
@@ -1024,8 +1007,17 @@ public class MainForm extends javax.swing.JFrame implements BackPropagationInter
         CoreVariable.EPOCH = Double.valueOf(epochField.getText());
         CoreVariable.ALPHA = Double.valueOf(alphaField.getText());
         CoreVariable.THETA = Double.valueOf(toleranceField.getText());
+        logDataField.setText("Application training in progress...");
         presenter.learn(AlphabetLibrary.ALPHABET_TRAINING, AlphabetLibrary.TARGET);
     }//GEN-LAST:event_trainButtonActionPerformed
+
+    /**
+     * Test pattern button
+     * @param evt 
+     */
+    private void testButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_testButtonActionPerformed
+        presenter.test(data);
+    }//GEN-LAST:event_testButtonActionPerformed
 
     /**
      * a main function in this application
@@ -1292,7 +1284,7 @@ public class MainForm extends javax.swing.JFrame implements BackPropagationInter
      */
     @Override
     public void showLogData(String logData) {
-        
+        logDataField.append(logData);
     }
     
     /**
@@ -1345,5 +1337,10 @@ public class MainForm extends javax.swing.JFrame implements BackPropagationInter
     @Override
     public void setPresenter(BackPropagationInterface.Presenter presenter) {
         this.presenter = presenter;
+    }
+
+    @Override
+    public void showResult(String result) {
+        valueLabel.setText(result);
     }
 }

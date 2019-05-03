@@ -5,6 +5,7 @@
  */
 package backpropagationalphabet.lib;
 
+import java.util.Arrays;
 import javax.swing.JOptionPane;
 
 /**
@@ -15,7 +16,11 @@ import javax.swing.JOptionPane;
  */
 public class BackPropagationLibrary implements BackPropagationInterface.Presenter{
     private double[][] bobotInvisibleLayer, bobotOutputLayer;
-    private double[] biasInvisibleLayer, biasOutputLayer, hiddenLayer, errOutputLayer, errHiddenLayer;
+    private double[] biasInvisibleLayer, biasOutputLayer; 
+    private double[] hiddenLayerBefore, hiddenLayer, errHiddenLayer; 
+    private double[] outputLayerBefore, outputLayer, errOutputLayer;
+    private double[][] deltaBobotOutputLayer, deltaBobotHiddenLayer;
+    private double[] deltaBiasOutputLayer, deltaBiasHiddenLayer;
     private double alpha, theta;
     private int epoch = 0, iteration = 0;
     private final BackPropagationInterface.View contextBackPropagationInterface;
@@ -31,8 +36,8 @@ public class BackPropagationLibrary implements BackPropagationInterface.Presente
     /**
      * Learn your pattern to this application. 
      * This function is require CoreVariable class to define weight and more input variables 
-     * @param input[][]
-     * @param target[][]
+     * @param input
+     * @param target
      */
     @Override
     public void learn(double[][] input, double[][] target){
@@ -40,34 +45,131 @@ public class BackPropagationLibrary implements BackPropagationInterface.Presente
         bobotOutputLayer = CoreVariable.getBobotOutputLayer();
         biasInvisibleLayer = CoreVariable.getBiasInvisibleLayer();
         biasOutputLayer = CoreVariable.getBiasOutputLayer();
+        contextBackPropagationInterface.showLogData(
+                "Bobot Invisible Generate : " + Arrays.stream(bobotInvisibleLayer).toString()
+        );
+        contextBackPropagationInterface.showLogData(
+                "Bobot Output Generate : " + Arrays.stream(bobotOutputLayer).toString()
+        );
+        contextBackPropagationInterface.showLogData(
+                "Bias Invisible Generate : " + Arrays.stream(biasInvisibleLayer).toString()
+        );
+        contextBackPropagationInterface.showLogData(
+                "Bias Output Generate : " + Arrays.stream(biasOutputLayer).toString()
+        );
+        hiddenLayerBefore = new double[biasInvisibleLayer.length];
         hiddenLayer = new double[biasInvisibleLayer.length];
+        errHiddenLayer = new double[biasInvisibleLayer.length];
+        
+        outputLayerBefore = new double[biasOutputLayer.length];
+        outputLayer = new double[biasOutputLayer.length];
+        errOutputLayer = new double[biasOutputLayer.length];
+        
+        deltaBiasHiddenLayer = new double[63];
+        deltaBiasOutputLayer = new double[6];
+        
+        deltaBobotHiddenLayer = new double[63][63];
+        deltaBobotOutputLayer = new double[63][6];
+        
         alpha = CoreVariable.ALPHA;
+        double max1, max2, maxFinal;
         try{            
             do{
                 if (iteration == input.length) {
                     iteration = 0;
-                    epoch++;
-                    contextBackPropagationInterface.showEpochData(epoch);
+                    epoch++;                    
+                }
+                contextBackPropagationInterface.showEpochData(epoch);
+                
+                // Get Invisible Signal Value
+                for (int i = 0; i < input[iteration].length; i++) {
+                    hiddenLayerBefore[i] = countLayerSignal(input[iteration], bobotInvisibleLayer[iteration], biasInvisibleLayer[iteration]);                    
+                    hiddenLayer[i] = activationSigmoidBipolar(hiddenLayerBefore[i]);
+                }
+
+                //Show Log Hidden Layer Data
+                contextBackPropagationInterface.showLogData(
+                        "Hidden Layer Before Data : " + Arrays.toString(hiddenLayerBefore)
+                );
+                contextBackPropagationInterface.showLogData(
+                        "Hidden Layer Data after activation : " + Arrays.toString(hiddenLayer)
+                );
+
+                //Get Output Signal Value
+                for (int j = 0; j < target[iteration].length; j++) {
+                    outputLayerBefore[j] = countLayerSignal(hiddenLayer, bobotOutputLayer[j], biasOutputLayer[j]);
+                    outputLayer[j] = activationSigmoidBipolar(outputLayerBefore[j]);
+                }
+
+                //Show Log Output Layer Data
+                contextBackPropagationInterface.showLogData(
+                        "Output Layer Before Data : " + Arrays.toString(outputLayerBefore)
+                );
+                contextBackPropagationInterface.showLogData(
+                        "Output Layer Data after activation : " + Arrays.toString(outputLayer)
+                );
+
+                //Count error, delta W, and delta Bias on Output Layer
+                errOutputLayer = countErrorOutputLayer(outputLayer, target[iteration], outputLayerBefore);
+                deltaBobotOutputLayer = countDeltaBobotOutputLayer(outputLayerBefore, errOutputLayer);
+                deltaBiasOutputLayer = countDeltaBiasOutputLayer(errOutputLayer);
+                
+                //Count error, delta W and delta Bias on Hidden Layer
+                errHiddenLayer = countErrorHiddenLayer(errOutputLayer, bobotOutputLayer[iteration], hiddenLayerBefore);
+                deltaBobotHiddenLayer = countDeltaBobotHiddenLayer(errHiddenLayer, input[iteration]);
+                deltaBiasHiddenLayer = countDeltaBiasHiddenLayer(errHiddenLayer);
+                
+                max1 = Arrays.stream(errOutputLayer).max().getAsDouble();
+                max2 = Arrays.stream(errHiddenLayer).max().getAsDouble();
+                                
+                double[] maxErr = {
+                    max1, max2
+                };
+                System.out.println(Arrays.toString(maxErr));
+                maxFinal = Arrays.stream(maxErr).max().getAsDouble();
+                
+                //Show max error value
+                contextBackPropagationInterface.showErrorData(maxFinal);
+                
+                //Check break if condition
+                if (maxFinal >= CoreVariable.THETA) {
+                    updateBobotOutputLayer(bobotOutputLayer, deltaBobotOutputLayer);
+                    updateBobotHiddenLayer(bobotInvisibleLayer, deltaBobotHiddenLayer);
+                }
+                else {
+                    break;
                 }
                 
+                iteration++;
             }while(epoch != CoreVariable.EPOCH);
         }
         catch(IndexOutOfBoundsException e){
             JOptionPane.showMessageDialog(null, e.toString());
+            System.err.println(e.toString());
         }
     }
     
     /**
      * Test your input is same with target (this function used after learning process)
-     * @param input[]
+     * @param input
      */
     @Override
     public void test(double[] input){
         try{
-            
+            for (int i = 0; i < input.length; i++) {
+                hiddenLayerBefore[i] = countLayerSignal(input, bobotInvisibleLayer[i], biasInvisibleLayer[i]);
+                hiddenLayer[i] = activationSigmoidBipolar(hiddenLayerBefore[i]);
+            }
+            for (int i = 0; i < biasOutputLayer.length; i++) {
+                outputLayerBefore[i] = countLayerSignal(hiddenLayer, bobotOutputLayer[i], biasOutputLayer[i]);
+                outputLayer[i] = activationSigmoidBipolar(outputLayerBefore[i]);
+            }
+            System.out.println(Arrays.toString(outputLayer));
+            contextBackPropagationInterface.showResult(isSameWithTarget(outputLayer));
         }
         catch(Exception e){
-            
+            JOptionPane.showMessageDialog(null, e.toString());
+            System.err.println(e.toString());
         }
     }
     
@@ -81,19 +183,138 @@ public class BackPropagationLibrary implements BackPropagationInterface.Presente
     private double countLayerSignal(double[] input, double[] bobot, double bias){
         double temp = 0;
         for (int i = 0; i < bobot.length; i++) {
-            temp = input[i] * bobot[i];
+            temp = temp + (input[i] * bobot[i]);
         }        
         return bias + temp;
     }
     
-    private double countErrorOutputLayer(){
-        return 0;
+    /**
+     * Count error of the training process on the Output Layer
+     * @param outputLayer
+     * @param target
+     * @param outputLayerBefore
+     * @return 
+     */
+    private double[] countErrorOutputLayer(double[] outputLayer, double[] target, double[] outputLayerBefore){
+        double[] err = new double[outputLayer.length];
+        for (int i = 0; i < target.length; i++) {
+            err[i] = (target[i] - outputLayer[i]) * derivativeActivationSigmoidBipolar(outputLayerBefore[i]);
+        }
+        return err;
     }
     
-    private double countErrorHiddenLayer(){
-        return 0;
+    /**
+     * Count error of the training process on the Hidden Layer
+     * @param errOutputLayer
+     * @param bobotOutputLayer
+     * @param hiddenLayerBefore
+     * @return 
+     */
+    private double[] countErrorHiddenLayer(double[] errOutputLayer, double[] bobotOutputLayer, double[] hiddenLayerBefore){
+        double[] err = new double[hiddenLayerBefore.length];
+        double sum = 0;
+        for (int i = 0; i < errOutputLayer.length; i++) {
+            sum = sum + (errOutputLayer[i] * bobotOutputLayer[i]);
+        }
+        for (int i = 0; i < hiddenLayerBefore.length; i++) {
+            err[i] = sum * derivativeActivationSigmoidBipolar(hiddenLayerBefore[i]);
+        }
+        return err;
     }
     
+    /**
+     * Count delta W of Output Layer
+     * @param outputLayerBefore
+     * @param errOutputLayer
+     * @return 
+     */
+    private double[][] countDeltaBobotOutputLayer(double[] outputLayerBefore, double[] errOutputLayer){
+        double[][] deltaBobot;
+        deltaBobot = new double[63][6];
+        for (int i = 0; i < deltaBobot.length; i++) {
+            for (int j = 0; j < deltaBobot[i].length; j++) {
+                deltaBobot[i][j] = CoreVariable.ALPHA * errOutputLayer[j] * outputLayerBefore[j];                            
+            }            
+        }
+        return deltaBobot;
+    }
+    
+    /**
+     * Count delta Bias of Output Layer
+     * @param errOutputLayer
+     * @return 
+     */
+    private double[] countDeltaBiasOutputLayer(double[] errOutputLayer){
+        double[] deltaBias = new double[errOutputLayer.length];
+        for (int i = 0; i < errOutputLayer.length; i++) {
+            deltaBias[i] = CoreVariable.ALPHA * errOutputLayer[i];            
+        }
+        return deltaBias;
+    }
+    
+    /**
+     * Count delta W of Hidden Layer
+     * @param errHiddenLayer
+     * @param input
+     * @return 
+     */
+    private double[][] countDeltaBobotHiddenLayer(double[] errHiddenLayer, double[] input){
+        double[][] deltaBobot;
+        deltaBobot = new double[input.length][63];
+        for (int i = 0; i < deltaBobot.length; i++) {
+            for (int j = 0; j < deltaBobot[i].length; j++) {
+                deltaBobot[i][j] = CoreVariable.ALPHA * errHiddenLayer[j] * input[j];
+            }            
+        }
+        return deltaBobot;
+    }
+    
+    /**
+     * Count delta Bias of Hidden Layer
+     * @param errHiddenLayer
+     * @return 
+     */
+    private double[] countDeltaBiasHiddenLayer(double[] errHiddenLayer){
+        double[] deltaBias = new double[errHiddenLayer.length];
+        for (int i = 0; i < errHiddenLayer.length; i++) {
+            deltaBias[i] = CoreVariable.ALPHA * errHiddenLayer[i];            
+        }
+        return deltaBias;
+    }
+    
+    /**
+     * Update W to Output Layer
+     * @param bobotOutputLayer
+     * @param deltaBobotOutput
+     * @return 
+     */
+    private void updateBobotOutputLayer(double[][] bobotOutputLayer, double[][] deltaBobotOutput){
+        for (int i = 0; i < bobotOutputLayer.length; i++) {
+            for (int j = 0; j < bobotOutputLayer[i].length; j++) {
+                bobotOutputLayer[i][j] = bobotOutputLayer[i][j] + deltaBobotOutput[i][j];
+            }            
+        }
+        contextBackPropagationInterface.showLogData(
+                        "Update Bobot Output Layer : " + String.valueOf(Arrays.stream(bobotOutputLayer).toString())
+                );
+    }
+    
+    /**
+     * Update W to Hidden Layer
+     * @param bobotHiddenLayer
+     * @param deltaBobotHidden
+     * @return 
+     */
+    private void updateBobotHiddenLayer(double[][] bobotHiddenLayer, double[][] deltaBobotHidden){
+        for (int i = 0; i < bobotHiddenLayer.length; i++) {
+            for (int j = 0; j < bobotHiddenLayer[i].length; j++) {
+                bobotHiddenLayer[i][j] = bobotHiddenLayer[i][j] + deltaBobotHidden[i][j];
+            }            
+        }
+        contextBackPropagationInterface.showLogData(
+                        "Update Bobot Hidden Layer : " + String.valueOf(Arrays.stream(bobotHiddenLayer).toString())
+                );
+    }
     /**
     * A activation function to get output value with sigmoid binary
     * @params input
@@ -129,15 +350,16 @@ public class BackPropagationLibrary implements BackPropagationInterface.Presente
     /**
      * a function to check is the input is same with the target after activation
      * @param input
-     * @param target
      * @return 
      */
-    private boolean isSameWithTarget(double input, double target){
-        if (input == target) {
-            return true;
+    private String isSameWithTarget(double[] input){
+        String value = "";
+        for (int i = 0; i < 26; i++) {
+            if (input == AlphabetLibrary.TARGET[i]) {
+                value = AlphabetLibrary.ALPHABET_STATUS[i];
+                break;
+            }
         }
-        else {
-            return false;
-        }
+        return value;
     }
 }
