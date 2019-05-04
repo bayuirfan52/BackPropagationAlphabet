@@ -320,7 +320,7 @@ public class BackPropagationLibrary implements BackPropagationInterface.Presente
     * @params input
     */
     private double activationSigmoidBinary(double input){
-         return 1 / (1 + (Math.exp(input)));        
+         return 1 / (1 + (Math.exp(-input)));        
     }
     
     /**
