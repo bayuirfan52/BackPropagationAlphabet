@@ -41,6 +41,8 @@ public class BackPropagationLibrary implements BackPropagationInterface.Presente
      */
     @Override
     public void learn(double[][] input, double[][] target){
+        Boolean[] checkUpdate = new Boolean[input.length];
+        boolean check, isLoop;
         bobotInvisibleLayer = CoreVariable.getBobotInvisibleLayer();
         bobotOutputLayer = CoreVariable.getBobotOutputLayer();
         biasInvisibleLayer = CoreVariable.getBiasInvisibleLayer();
@@ -80,7 +82,7 @@ public class BackPropagationLibrary implements BackPropagationInterface.Presente
                     epoch++;                    
                 }
                 contextBackPropagationInterface.showEpochData(epoch);
-                
+                System.err.println("Pattern : " + (iteration + 1));
                 // Get Invisible Signal Value
                 for (int i = 0; i < input[iteration].length; i++) {
                     hiddenLayerBefore[i] = countLayerSignal(input[iteration], bobotInvisibleLayer[iteration], biasInvisibleLayer[iteration]);                    
@@ -137,19 +139,25 @@ public class BackPropagationLibrary implements BackPropagationInterface.Presente
                 double[] maxErr = {
                     max1, max2
                 };
-                System.out.println(Arrays.toString(maxErr));
                 maxFinal = Arrays.stream(maxErr).max().getAsDouble();
                 
                 //Show max error value
                 contextBackPropagationInterface.showErrorData(maxFinal);
-                
+                check = outputLayer != target[iteration];
+                checkUpdate[iteration] = check;
                 //Check break if condition
                 if (maxFinal >= CoreVariable.THETA) {
                     updateBobotOutputLayer(bobotOutputLayer, deltaBobotOutputLayer);
                     updateBobotHiddenLayer(bobotInvisibleLayer, deltaBobotHiddenLayer);
                 }
                 else {
-                    break;
+                    isLoop = Arrays.stream(checkUpdate).noneMatch(val -> val);
+                    contextBackPropagationInterface.showLogData("Is Activation same with target? : " + isLoop);
+                    System.err.println("Checking Array : " + Arrays.toString(checkUpdate));
+                    if (isLoop) {
+                        contextBackPropagationInterface.showLogData("Finished");
+                        break;
+                    }
                 }
                 
                 iteration++;
@@ -361,7 +369,7 @@ public class BackPropagationLibrary implements BackPropagationInterface.Presente
      * @return 
      */
     private String isSameWithTarget(double[] input){
-        String value = "";
+        String value = "Unknown";
         for (int i = 0; i < 26; i++) {
             if (input == AlphabetLibrary.TARGET[i]) {
                 value = AlphabetLibrary.ALPHABET_STATUS[i];
