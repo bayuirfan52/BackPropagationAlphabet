@@ -1222,7 +1222,6 @@
               <SubComponents>
                 <Component class="javax.swing.JTextArea" name="logDataField">
                   <Properties>
-                    <Property name="editable" type="boolean" value="false"/>
                     <Property name="columns" type="int" value="20"/>
                     <Property name="rows" type="int" value="1000"/>
                   </Properties>

@@ -19,7 +19,7 @@ public class BackPropagationLibrary implements BackPropagationInterface.Presente
     private double[] biasInvisibleLayer, biasOutputLayer; 
     private double[] hiddenLayerBefore, hiddenLayer, errHiddenLayer; 
     private double[] outputLayerBefore, outputLayer, errOutputLayer;
-    private double[][] deltaBobotOutputLayer, deltaBobotHiddenLayer;
+    private double[] deltaBobotOutputLayer, deltaBobotHiddenLayer;
     private double[] deltaBiasOutputLayer, deltaBiasHiddenLayer;
     private double alpha, theta;
     private int epoch = 0, iteration = 0;
@@ -46,16 +46,16 @@ public class BackPropagationLibrary implements BackPropagationInterface.Presente
         biasInvisibleLayer = CoreVariable.getBiasInvisibleLayer();
         biasOutputLayer = CoreVariable.getBiasOutputLayer();
         contextBackPropagationInterface.showLogData(
-                "Bobot Invisible Generate : " + Arrays.stream(bobotInvisibleLayer).toString()
+                "Bobot Invisible Generate : " + Arrays.toString(bobotInvisibleLayer)
         );
         contextBackPropagationInterface.showLogData(
-                "Bobot Output Generate : " + Arrays.stream(bobotOutputLayer).toString()
+                "Bobot Output Generate : " + Arrays.toString(bobotOutputLayer)
         );
         contextBackPropagationInterface.showLogData(
-                "Bias Invisible Generate : " + Arrays.stream(biasInvisibleLayer).toString()
+                "Bias Invisible Generate : " + Arrays.toString(biasInvisibleLayer)
         );
         contextBackPropagationInterface.showLogData(
-                "Bias Output Generate : " + Arrays.stream(biasOutputLayer).toString()
+                "Bias Output Generate : " + Arrays.toString(biasOutputLayer)
         );
         hiddenLayerBefore = new double[biasInvisibleLayer.length];
         hiddenLayer = new double[biasInvisibleLayer.length];
@@ -68,8 +68,8 @@ public class BackPropagationLibrary implements BackPropagationInterface.Presente
         deltaBiasHiddenLayer = new double[63];
         deltaBiasOutputLayer = new double[6];
         
-        deltaBobotHiddenLayer = new double[63][63];
-        deltaBobotOutputLayer = new double[63][6];
+        deltaBobotHiddenLayer = new double[63];
+        deltaBobotOutputLayer = new double[6];
         
         alpha = CoreVariable.ALPHA;
         double max1, max2, maxFinal;
@@ -91,7 +91,13 @@ public class BackPropagationLibrary implements BackPropagationInterface.Presente
                 contextBackPropagationInterface.showLogData(
                         "Hidden Layer Before Data : " + Arrays.toString(hiddenLayerBefore)
                 );
+                System.out.println(
+                        "Hidden Layer Before Data : " + Arrays.toString(hiddenLayerBefore)
+                );
                 contextBackPropagationInterface.showLogData(
+                        "Hidden Layer Data after activation : " + Arrays.toString(hiddenLayer)
+                );
+                System.out.println(
                         "Hidden Layer Data after activation : " + Arrays.toString(hiddenLayer)
                 );
 
@@ -105,7 +111,13 @@ public class BackPropagationLibrary implements BackPropagationInterface.Presente
                 contextBackPropagationInterface.showLogData(
                         "Output Layer Before Data : " + Arrays.toString(outputLayerBefore)
                 );
+                System.out.println(
+                        "Output Layer Before Data : " + Arrays.toString(outputLayerBefore)
+                );
                 contextBackPropagationInterface.showLogData(
+                        "Output Layer Data after activation : " + Arrays.toString(outputLayer)
+                );
+                System.out.println(
                         "Output Layer Data after activation : " + Arrays.toString(outputLayer)
                 );
 
@@ -228,13 +240,11 @@ public class BackPropagationLibrary implements BackPropagationInterface.Presente
      * @param errOutputLayer
      * @return 
      */
-    private double[][] countDeltaBobotOutputLayer(double[] outputLayerBefore, double[] errOutputLayer){
-        double[][] deltaBobot;
-        deltaBobot = new double[63][6];
+    private double[] countDeltaBobotOutputLayer(double[] outputLayerBefore, double[] errOutputLayer){
+        double[] deltaBobot;
+        deltaBobot = new double[6];
         for (int i = 0; i < deltaBobot.length; i++) {
-            for (int j = 0; j < deltaBobot[i].length; j++) {
-                deltaBobot[i][j] = CoreVariable.ALPHA * errOutputLayer[j] * outputLayerBefore[j];                            
-            }            
+                deltaBobot[i] = CoreVariable.ALPHA * errOutputLayer[i] * outputLayerBefore[i];
         }
         return deltaBobot;
     }
@@ -258,13 +268,11 @@ public class BackPropagationLibrary implements BackPropagationInterface.Presente
      * @param input
      * @return 
      */
-    private double[][] countDeltaBobotHiddenLayer(double[] errHiddenLayer, double[] input){
-        double[][] deltaBobot;
-        deltaBobot = new double[input.length][63];
+    private double[] countDeltaBobotHiddenLayer(double[] errHiddenLayer, double[] input){
+        double[] deltaBobot;
+        deltaBobot = new double[63];
         for (int i = 0; i < deltaBobot.length; i++) {
-            for (int j = 0; j < deltaBobot[i].length; j++) {
-                deltaBobot[i][j] = CoreVariable.ALPHA * errHiddenLayer[j] * input[j];
-            }            
+                deltaBobot[i] = CoreVariable.ALPHA * errHiddenLayer[i] * input[i];   
         }
         return deltaBobot;
     }
@@ -288,10 +296,10 @@ public class BackPropagationLibrary implements BackPropagationInterface.Presente
      * @param deltaBobotOutput
      * @return 
      */
-    private void updateBobotOutputLayer(double[][] bobotOutputLayer, double[][] deltaBobotOutput){
+    private void updateBobotOutputLayer(double[][] bobotOutputLayer, double[] deltaBobotOutput){
         for (int i = 0; i < bobotOutputLayer.length; i++) {
             for (int j = 0; j < bobotOutputLayer[i].length; j++) {
-                bobotOutputLayer[i][j] = bobotOutputLayer[i][j] + deltaBobotOutput[i][j];
+                bobotOutputLayer[i][j] = bobotOutputLayer[i][j] + deltaBobotOutput[j];
             }            
         }
         contextBackPropagationInterface.showLogData(
@@ -305,10 +313,10 @@ public class BackPropagationLibrary implements BackPropagationInterface.Presente
      * @param deltaBobotHidden
      * @return 
      */
-    private void updateBobotHiddenLayer(double[][] bobotHiddenLayer, double[][] deltaBobotHidden){
+    private void updateBobotHiddenLayer(double[][] bobotHiddenLayer, double[] deltaBobotHidden){
         for (int i = 0; i < bobotHiddenLayer.length; i++) {
             for (int j = 0; j < bobotHiddenLayer[i].length; j++) {
-                bobotHiddenLayer[i][j] = bobotHiddenLayer[i][j] + deltaBobotHidden[i][j];
+                bobotHiddenLayer[i][j] = bobotHiddenLayer[i][j] + deltaBobotHidden[j];
             }            
         }
         contextBackPropagationInterface.showLogData(

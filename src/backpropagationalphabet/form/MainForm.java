@@ -860,7 +860,6 @@ public class MainForm extends javax.swing.JFrame implements BackPropagationInter
 
         jTabbedPane1.addTab("Testing", jPanel1);
 
-        logDataField.setEditable(false);
         logDataField.setColumns(20);
         logDataField.setRows(1000);
         jScrollPane1.setViewportView(logDataField);
