@@ -127,15 +127,14 @@ public class BackPropagationLibrary implements BackPropagationInterface.Presente
                 errOutputLayer = countErrorOutputLayer(outputLayer, target[iteration], outputLayerBefore);
                 deltaBobotOutputLayer = countDeltaBobotOutputLayer(outputLayerBefore, errOutputLayer);
                 deltaBiasOutputLayer = countDeltaBiasOutputLayer(errOutputLayer);
+                updateBobotOutputLayer(bobotOutputLayer, deltaBobotOutputLayer);
+                updateBiasOutputLayer(biasOutputLayer, deltaBiasOutputLayer);
                 
                 //Count error, delta W and delta Bias on Hidden Layer
                 errHiddenLayer = countErrorHiddenLayer(errOutputLayer, bobotOutputLayer[iteration], hiddenLayerBefore);
                 deltaBobotHiddenLayer = countDeltaBobotHiddenLayer(errHiddenLayer, input[iteration]);
                 deltaBiasHiddenLayer = countDeltaBiasHiddenLayer(errHiddenLayer);
-                
-                updateBobotOutputLayer(bobotOutputLayer, deltaBobotOutputLayer);
                 updateBobotHiddenLayer(bobotInvisibleLayer, deltaBobotHiddenLayer);
-                updateBiasOutputLayer(biasOutputLayer, deltaBiasOutputLayer);
                 updateBiasInvisibleLayer(biasInvisibleLayer, deltaBiasHiddenLayer);
                 
                 max1 = Arrays.stream(errOutputLayer).max().getAsDouble();
