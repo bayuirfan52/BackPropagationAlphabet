@@ -1006,7 +1006,7 @@ public class MainForm extends javax.swing.JFrame implements BackPropagationInter
         CoreVariable.EPOCH = Double.valueOf(epochField.getText());
         CoreVariable.ALPHA = Double.valueOf(alphaField.getText());
         CoreVariable.THETA = Double.valueOf(toleranceField.getText());
-        logDataField.setText("Application training in progress...");
+        logDataField.append("Application training in progress...");
         presenter.learn(AlphabetLibrary.ALPHABET_TRAINING, AlphabetLibrary.TARGET);
     }//GEN-LAST:event_trainButtonActionPerformed
 

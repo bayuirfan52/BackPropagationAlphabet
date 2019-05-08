@@ -133,6 +133,11 @@ public class BackPropagationLibrary implements BackPropagationInterface.Presente
                 deltaBobotHiddenLayer = countDeltaBobotHiddenLayer(errHiddenLayer, input[iteration]);
                 deltaBiasHiddenLayer = countDeltaBiasHiddenLayer(errHiddenLayer);
                 
+                updateBobotOutputLayer(bobotOutputLayer, deltaBobotOutputLayer);
+                updateBobotHiddenLayer(bobotInvisibleLayer, deltaBobotHiddenLayer);
+                updateBiasOutputLayer(biasOutputLayer, deltaBiasOutputLayer);
+                updateBiasInvisibleLayer(biasInvisibleLayer, deltaBiasHiddenLayer);
+                
                 max1 = Arrays.stream(errOutputLayer).max().getAsDouble();
                 max2 = Arrays.stream(errHiddenLayer).max().getAsDouble();
                                 
@@ -145,10 +150,10 @@ public class BackPropagationLibrary implements BackPropagationInterface.Presente
                 contextBackPropagationInterface.showErrorData(maxFinal);
                 check = outputLayer != target[iteration];
                 checkUpdate[iteration] = check;
+                
                 //Check break if condition
-                if (maxFinal >= CoreVariable.THETA) {
-                    updateBobotOutputLayer(bobotOutputLayer, deltaBobotOutputLayer);
-                    updateBobotHiddenLayer(bobotInvisibleLayer, deltaBobotHiddenLayer);
+                if (maxFinal <= CoreVariable.THETA) {
+                    break;
                 }
                 else {
                     isLoop = Arrays.stream(checkUpdate).noneMatch(val -> val);
@@ -313,6 +318,30 @@ public class BackPropagationLibrary implements BackPropagationInterface.Presente
         contextBackPropagationInterface.showLogData(
                         "Update Bobot Output Layer : " + String.valueOf(Arrays.stream(bobotOutputLayer).toString())
                 );
+    }
+    
+    /**
+     * Update bias in Output Layer
+     * @param biasOutputLayer
+     * @param deltaBiasOutputLayer 
+     */
+    private void updateBiasOutputLayer(double[] biasOutputLayer, double[] deltaBiasOutputLayer){
+        for (int i = 0; i < biasOutputLayer.length; i++) {
+            biasOutputLayer[i] = biasOutputLayer[i] + deltaBiasOutputLayer[i];
+            
+        }
+    }
+    
+    /**
+     * Update bias in Hidden Layer
+     * @param biasInvisibleLayer
+     * @param deltaBiasInvisibleLayer 
+     */
+    private void updateBiasInvisibleLayer(double[] biasInvisibleLayer, double[] deltaBiasInvisibleLayer){
+        for (int i = 0; i < biasInvisibleLayer.length; i++) {
+            biasInvisibleLayer[i] = biasInvisibleLayer[i] + deltaBiasInvisibleLayer[i];
+            
+        }
     }
     
     /**
