@@ -10,7 +10,10 @@ import backpropagationalphabet.lib.BackPropagationInterface;
 import backpropagationalphabet.lib.BackPropagationLibrary;
 import backpropagationalphabet.lib.CoreVariable;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.GraphicsEnvironment;
+import java.awt.Rectangle;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.JButton;
@@ -32,11 +35,22 @@ public class MainForm extends javax.swing.JFrame implements BackPropagationInter
          */
         public MainForm() {
                 initComponents();
+                fitInitialWindow();
                 setButtonArrayInitializer();
                 setButtonActions();
                 setDefaultPatterns();
                 this.setPresenter(presenter);
                 addHelpMenu();
+        }
+
+        private void fitInitialWindow() {
+                Rectangle usableScreen = GraphicsEnvironment.getLocalGraphicsEnvironment()
+                                .getMaximumWindowBounds();
+                int width = Math.min(Math.max(getWidth(), 800), usableScreen.width);
+                int height = Math.min(Math.max(getHeight(), 520), usableScreen.height);
+                setMinimumSize(new Dimension(Math.min(760, usableScreen.width),
+                                Math.min(480, usableScreen.height)));
+                setSize(width, height);
         }
 
         private BackPropagationInterface.Presenter presenter = new BackPropagationLibrary(this);
