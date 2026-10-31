@@ -5,8 +5,9 @@ package backpropagationalphabet.lib;
 
 /**
  * A one-hidden-layer bipolar sigmoid network (63 inputs, 63 hidden units,
- * 6 output units). Training uses online backpropagation and runs the requested
- * number of epochs. The target vectors in AlphabetLibrary are preserved.
+ * 6 output units). Training uses online backpropagation and stops when the
+ * MSE tolerance is met or the requested maximum epoch is reached.
+ * The target vectors in AlphabetLibrary are preserved.
  */
 public class BackPropagationLibrary implements BackPropagationInterface.Presenter {
     private double[][] inputHiddenWeights;
@@ -27,6 +28,7 @@ public class BackPropagationLibrary implements BackPropagationInterface.Presente
         int hiddenCount = inputCount;
         int outputCount = target[0].length;
         double learningRate = CoreVariable.ALPHA;
+        double tolerance = CoreVariable.THETA;
         int epochs = (int) CoreVariable.EPOCH;
 
         if (epochs < 1 || CoreVariable.EPOCH != epochs) {
@@ -35,6 +37,9 @@ public class BackPropagationLibrary implements BackPropagationInterface.Presente
         if (!(learningRate > 0.0) || Double.isInfinite(learningRate) || Double.isNaN(learningRate)) {
             throw new IllegalArgumentException("Learning rate harus lebih besar dari 0.");
         }
+        if (tolerance < 0.0 || Double.isInfinite(tolerance) || Double.isNaN(tolerance)) {
+            throw new IllegalArgumentException("Tolerance harus berupa angka 0 atau lebih besar.");
+        }
 
         initializeWeights(inputCount, hiddenCount, outputCount);
         double[] hidden = new double[hiddenCount];
@@ -42,14 +47,15 @@ public class BackPropagationLibrary implements BackPropagationInterface.Presente
         double[] outputDelta = new double[outputCount];
         double[] hiddenDelta = new double[hiddenCount];
 
+        int completedEpoch = 0;
+        double meanSquaredError = Double.POSITIVE_INFINITY;
+        boolean toleranceReached = false;
         for (int epoch = 1; epoch <= epochs; epoch++) {
-            double squaredError = 0.0;
             for (int pattern = 0; pattern < input.length; pattern++) {
                 forward(input[pattern], hidden, output);
 
                 for (int k = 0; k < outputCount; k++) {
                     double difference = target[pattern][k] - output[k];
-                    squaredError += difference * difference;
                     outputDelta[k] = difference * bipolarDerivativeFromOutput(output[k]);
                 }
 
@@ -76,14 +82,27 @@ public class BackPropagationLibrary implements BackPropagationInterface.Presente
                 }
             }
 
-            double meanSquaredError = squaredError / (input.length * outputCount);
+            // Measure the complete training set with the updated weights so the
+            // tolerance is checked against one consistent end-of-epoch model.
+            meanSquaredError = calculateMeanSquaredError(input, target, hidden, output);
+            completedEpoch = epoch;
             view.showEpochData(epoch);
             view.showErrorData(meanSquaredError);
-            // Limit UI/log overhead: one concise line per epoch, no per-weight dump.
             view.showLogData("Epoch " + epoch + "/" + epochs + " - MSE: " + meanSquaredError + "\n");
+
+            if (meanSquaredError <= tolerance) {
+                toleranceReached = true;
+                view.showLogData("Tolerance tercapai (MSE <= " + tolerance + "). Training berhenti lebih awal.\n");
+                break;
+            }
         }
         trained = true;
-        view.showLogData("Training selesai pada epoch " + epochs + ".\n");
+        if (toleranceReached) {
+            view.showLogData("Training selesai pada epoch " + completedEpoch + ".\n");
+        } else {
+            view.showLogData("Batas Epoch " + epochs + " tercapai. MSE akhir: " + meanSquaredError
+                    + " (Tolerance: " + tolerance + ").\n");
+        }
     }
 
     @Override
@@ -113,6 +132,19 @@ public class BackPropagationLibrary implements BackPropagationInterface.Presente
             }
             output[k] = bipolarSigmoid(sum);
         }
+    }
+
+    private double calculateMeanSquaredError(double[][] input, double[][] target,
+            double[] hidden, double[] output) {
+        double squaredError = 0.0;
+        for (int pattern = 0; pattern < input.length; pattern++) {
+            forward(input[pattern], hidden, output);
+            for (int k = 0; k < output.length; k++) {
+                double difference = target[pattern][k] - output[k];
+                squaredError += difference * difference;
+            }
+        }
+        return squaredError / (input.length * output.length);
     }
 
     private String classify(double[] output) {

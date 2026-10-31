@@ -1748,12 +1748,15 @@ public class MainForm extends javax.swing.JFrame implements BackPropagationInter
                         CoreVariable.THETA = Double.valueOf(toleranceField.getText().trim());
                         if (CoreVariable.EPOCH < 1 || CoreVariable.EPOCH != Math.floor(CoreVariable.EPOCH)
                                         || CoreVariable.ALPHA <= 0 || Double.isNaN(CoreVariable.ALPHA)
-                                        || Double.isInfinite(CoreVariable.ALPHA)) {
-                                throw new IllegalArgumentException("Epoch harus bilangan bulat positif dan Alpha harus > 0.");
+                                        || Double.isInfinite(CoreVariable.ALPHA)
+                                        || CoreVariable.THETA < 0 || Double.isNaN(CoreVariable.THETA)
+                                        || Double.isInfinite(CoreVariable.THETA)) {
+                                throw new IllegalArgumentException(
+                                                "Epoch harus bilangan bulat positif, Alpha harus > 0, dan Tolerance harus >= 0.");
                         }
                 } catch (IllegalArgumentException ex) {
                         JOptionPane.showMessageDialog(this,
-                                        "Periksa nilai Epoch dan Alpha. " + ex.getMessage(),
+                                        "Periksa nilai Epoch, Alpha, dan Tolerance. " + ex.getMessage(),
                                         "Input training tidak valid", JOptionPane.ERROR_MESSAGE);
                         return;
                 }

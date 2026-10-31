@@ -33,11 +33,11 @@ Proyek dikonfigurasi untuk source dan target Java 8.
 ### Training
 
 1. Buka tab **Training**.
-2. Isi **Alpha** (learning rate) dan **Epoch** (jumlah putaran penuh atas seluruh sampel). Nilai awal form adalah `0.1` dan `1000`.
+2. Isi **Alpha** (learning rate), **Epoch** (batas maksimum putaran penuh atas seluruh sampel), dan **Tolerance** (ambang MSE untuk berhenti lebih awal). Nilai awal form adalah `0.1`, `1000`, dan `0.1`.
 3. Klik **Train**. Training berjalan di latar belakang agar jendela tetap responsif. Log menampilkan MSE setiap epoch dan bergerak otomatis ke baris terbaru.
-4. Tunggu pesan bahwa training selesai.
+4. Training berhenti saat MSE seluruh data training `<= Tolerance` atau saat mencapai batas Epoch. Log mencatat alasan dan epoch akhirnya.
 
-Jumlah epoch yang diminta dijalankan penuh. Field **Tolerance** masih ditampilkan untuk kompatibilitas form, tetapi belum dipakai sebagai kondisi penghentian.
+Tolerance `0` praktis menonaktifkan penghentian lebih awal (kecuali MSE tepat `0`). MSE diukur pada seluruh pola setelah pembaruan bobot di akhir setiap epoch.
 
 ### Menguji pola
 

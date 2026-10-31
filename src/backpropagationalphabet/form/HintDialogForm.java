@@ -88,14 +88,16 @@ public class HintDialogForm extends javax.swing.JFrame {
                 + "3. Klik TEST untuk meminta jaringan menebak huruf. Jaringan harus dilatih "
                 + "terlebih dahulu; hasilnya adalah target alfabet yang paling dekat dengan output.\n\n"
                 + "TRAINING\n"
-                + "1. Buka tab Training dan isi Alpha (learning rate) serta Epoch (jumlah putaran "
-                + "melewati seluruh pola training). Nilai awal yang disarankan: Alpha 0.1, Epoch 1000.\n"
+                + "1. Buka tab Training dan isi Alpha (learning rate), Epoch (batas maksimum putaran "
+                + "seluruh pola training), dan Tolerance (batas MSE untuk berhenti lebih awal). "
+                + "Nilai awal form: Alpha 0.1, Epoch 1000, Tolerance 0.1.\n"
                 + "2. Klik Train. Proses berjalan di latar belakang dan log MSE tiap epoch akan "
-                + "muncul sambil training berjalan. Tunggu sampai pesan Training selesai.\n"
+                + "muncul sambil training berjalan. Training berhenti saat MSE <= Tolerance atau "
+                + "saat mencapai batas Epoch.\n"
                 + "3. Setelah training selesai, kembali ke tab Testing dan uji pola.\n\n"
                 + "Catatan: bobot diinisialisasi secara acak saat training dimulai, sehingga hasil "
                 + "dapat sedikit berbeda tiap training. Bobot tidak disimpan setelah aplikasi ditutup.\n"
-                + "Tolerance saat ini hanya ditampilkan di form dan belum dipakai untuk menghentikan training.");
+                + "Tolerance 0 menonaktifkan penghentian lebih awal kecuali MSE tepat 0.");
         hintText.setEditable(false);
         hintText.setLineWrap(true);
         hintText.setWrapStyleWord(true);

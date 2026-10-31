@@ -4,7 +4,7 @@ package backpropagationalphabet.lib;
 public class CoreVariable {
     /** Learning rate used by online backpropagation. */
     public static double ALPHA;
-    /** Kept for the existing tolerance control; training currently runs all epochs. */
+    /** Mean squared error threshold for ending training before the epoch limit. */
     public static double THETA;
     /** Number of complete passes through all training patterns. */
     public static double EPOCH;
