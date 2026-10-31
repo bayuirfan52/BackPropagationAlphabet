@@ -101,6 +101,8 @@ public class HintDialogForm extends javax.swing.JFrame {
                 + "Catatan: bobot diinisialisasi secara acak saat training dimulai, sehingga hasil "
                 + "dapat sedikit berbeda tiap training. Bobot tidak disimpan setelah aplikasi ditutup.\n"
                 + "Tolerance 0 menonaktifkan penghentian lebih awal kecuali MSE tepat 0.");
+        hintText.setRows(18);
+        hintText.setColumns(58);
         hintText.setEditable(false);
         hintText.setLineWrap(true);
         hintText.setWrapStyleWord(true);
