@@ -59,6 +59,9 @@ public interface BackPropagationInterface {
          */
         void learn(double[][] input, double[][] target);
 
+        /** Request the active training process to stop after its current epoch. */
+        void stopTraining();
+
         /**
          * Test your pattern. Is your program know your input pattern
          * @param input

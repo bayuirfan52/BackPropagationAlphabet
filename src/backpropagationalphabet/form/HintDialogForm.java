@@ -96,7 +96,7 @@ public class HintDialogForm extends javax.swing.JFrame {
                 + "Nilai awal form: Alpha 0.1, Epoch 1000, Tolerance 0.1.\n"
                 + "2. Klik Train. Proses berjalan di latar belakang dan log MSE tiap epoch akan "
                 + "muncul sambil training berjalan. Training berhenti saat MSE <= Tolerance atau "
-                + "saat mencapai batas Epoch.\n"
+                + "saat mencapai batas Epoch. Klik Stop untuk berhenti setelah epoch berjalan selesai.\n"
                 + "3. Setelah training selesai, kembali ke tab Testing dan uji pola.\n\n"
                 + "Catatan: bobot diinisialisasi secara acak saat training dimulai, sehingga hasil "
                 + "dapat sedikit berbeda tiap training. Bobot tidak disimpan setelah aplikasi ditutup.\n"

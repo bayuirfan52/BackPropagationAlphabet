@@ -16,6 +16,7 @@ public class BackPropagationLibrary implements BackPropagationInterface.Presente
     private double[] outputBias;
     private final BackPropagationInterface.View view;
     private boolean trained;
+    private volatile boolean stopRequested;
 
     public BackPropagationLibrary(BackPropagationInterface.View view) {
         this.view = view;
@@ -23,6 +24,7 @@ public class BackPropagationLibrary implements BackPropagationInterface.Presente
 
     @Override
     public void learn(double[][] input, double[][] target) {
+        trained = false;
         validateTrainingData(input, target);
         int inputCount = input[0].length;
         int hiddenCount = inputCount;
@@ -50,7 +52,12 @@ public class BackPropagationLibrary implements BackPropagationInterface.Presente
         int completedEpoch = 0;
         double meanSquaredError = Double.POSITIVE_INFINITY;
         boolean toleranceReached = false;
+        boolean stoppedByUser = false;
         for (int epoch = 1; epoch <= epochs; epoch++) {
+            if (stopRequested) {
+                stoppedByUser = true;
+                break;
+            }
             for (int pattern = 0; pattern < input.length; pattern++) {
                 forward(input[pattern], hidden, output);
 
@@ -90,19 +97,31 @@ public class BackPropagationLibrary implements BackPropagationInterface.Presente
             view.showErrorData(meanSquaredError);
             view.showLogData("Epoch " + epoch + "/" + epochs + " - MSE: " + meanSquaredError + "\n");
 
+            if (stopRequested) {
+                stoppedByUser = true;
+                break;
+            }
             if (meanSquaredError <= tolerance) {
                 toleranceReached = true;
                 view.showLogData("Tolerance tercapai (MSE <= " + tolerance + "). Training berhenti lebih awal.\n");
                 break;
             }
         }
-        trained = true;
-        if (toleranceReached) {
+        trained = completedEpoch > 0;
+        if (stoppedByUser) {
+            view.showLogData("Training dihentikan oleh pengguna setelah epoch " + completedEpoch + ".\n");
+        } else if (toleranceReached) {
             view.showLogData("Training selesai pada epoch " + completedEpoch + ".\n");
-        } else {
+        } else if (completedEpoch == epochs) {
             view.showLogData("Batas Epoch " + epochs + " tercapai. MSE akhir: " + meanSquaredError
                     + " (Tolerance: " + tolerance + ").\n");
         }
+        stopRequested = false;
+    }
+
+    @Override
+    public void stopTraining() {
+        stopRequested = true;
     }
 
     @Override

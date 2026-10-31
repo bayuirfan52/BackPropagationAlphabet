@@ -1736,6 +1736,7 @@ public class MainForm extends javax.swing.JFrame implements BackPropagationInter
                 helpMenu.add(hintItem);
                 menuBar.add(helpMenu);
                 setJMenuBar(menuBar);
+                initializeStopButton();
         }
 
         /**
@@ -1777,6 +1778,7 @@ public class MainForm extends javax.swing.JFrame implements BackPropagationInter
 
                 training = true;
                 trainButton.setEnabled(false);
+                stopButton.setEnabled(true);
                 logDataField.setText("");
                 logDataField.append("Training dimulai...\n");
                 logDataField.append("Sampel: "
@@ -1795,6 +1797,7 @@ public class MainForm extends javax.swing.JFrame implements BackPropagationInter
                         protected void done() {
                                 training = false;
                                 trainButton.setEnabled(true);
+                                stopButton.setEnabled(false);
                                 try {
                                         get();
                                 } catch (Exception ex) {
@@ -1806,6 +1809,20 @@ public class MainForm extends javax.swing.JFrame implements BackPropagationInter
                 };
                 worker.execute();
         }// GEN-LAST:event_trainButtonActionPerformed
+
+        private void stopTrainingActionPerformed() {
+                if (!training) {
+                        return;
+                }
+                stopButton.setEnabled(false);
+                presenter.stopTraining();
+                showLogData("Permintaan Stop diterima; training berhenti setelah epoch saat ini selesai.\n");
+        }
+
+        private void initializeStopButton() {
+                stopButton.setEnabled(false);
+                stopButton.addActionListener(evt -> stopTrainingActionPerformed());
+        }
 
         /**
          * Test pattern button
