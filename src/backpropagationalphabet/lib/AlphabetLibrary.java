@@ -5,6 +5,8 @@
  */
 package backpropagationalphabet.lib;
 
+import java.util.Arrays;
+
 /**
  * a class with a final value of data training and data target to learn this
  * program to know the alphabetic data
@@ -459,4 +461,74 @@ public class AlphabetLibrary {
             "U", "V", "W", "X", "Y",
             "Z"
     };
+
+    /**
+     * Deterministic affine variants for each canonical 7x9 glyph. The first
+     * entry is the original pattern; the others shift, resize, or slightly
+     * slant it. Each transformed pattern keeps its source letter's target.
+     */
+    private static final double[][] AUGMENTATION_TRANSFORMS = {
+            { 0, 0, 1.00, 1.00, 0.00 },
+            { -1, 0, 1.00, 1.00, 0.00 },
+            { 1, 0, 1.00, 1.00, 0.00 },
+            { 0, -1, 1.00, 1.00, 0.00 },
+            { 0, 1, 1.00, 1.00, 0.00 },
+            { 0, 0, 0.85, 1.00, 0.00 },
+            { 0, 0, 1.15, 1.00, 0.00 },
+            { 0, 0, 1.00, 0.85, 0.00 },
+            { 0, 0, 1.00, 1.15, 0.00 },
+            { 0, 0, 1.00, 1.00, -0.12 },
+            { 0, 0, 1.00, 1.00, 0.12 }
+    };
+
+    /** Number of canonical and augmented samples generated for each letter. */
+    public static final int TRAINING_VARIANTS_PER_LETTER = AUGMENTATION_TRANSFORMS.length;
+
+    /** Return fresh training inputs, with 11 deterministic samples for each letter. */
+    public static double[][] getTrainingInputs() {
+        double[][] samples = new double[ALPHABET_TRAINING.length * TRAINING_VARIANTS_PER_LETTER][];
+        int sampleIndex = 0;
+        for (double[] pattern : ALPHABET_TRAINING) {
+            for (double[] transform : AUGMENTATION_TRANSFORMS) {
+                samples[sampleIndex++] = transform(pattern, transform);
+            }
+        }
+        return samples;
+    }
+
+    /** Return a target vector for every generated sample, preserving its letter. */
+    public static double[][] getTrainingTargets() {
+        double[][] targets = new double[ALPHABET_TRAINING.length * TRAINING_VARIANTS_PER_LETTER][];
+        int sampleIndex = 0;
+        for (double[] target : TARGET) {
+            for (int variant = 0; variant < TRAINING_VARIANTS_PER_LETTER; variant++) {
+                targets[sampleIndex++] = Arrays.copyOf(target, target.length);
+            }
+        }
+        return targets;
+    }
+
+    private static double[] transform(double[] pattern, double[] parameters) {
+        double translateX = parameters[0];
+        double translateY = parameters[1];
+        double scaleX = parameters[2];
+        double scaleY = parameters[3];
+        double shearX = parameters[4];
+        double[] transformed = new double[pattern.length];
+
+        for (int y = 0; y < 9; y++) {
+            for (int x = 0; x < 7; x++) {
+                double sourceX = (x - 3.0 - translateX - shearX * (y - 4.0)) / scaleX + 3.0;
+                double sourceY = (y - 4.0 - translateY) / scaleY + 4.0;
+                int nearestX = (int) Math.round(sourceX);
+                int nearestY = (int) Math.round(sourceY);
+                double value = -1;
+                if (nearestX >= 0 && nearestX < 7 && nearestY >= 0 && nearestY < 9) {
+                    value = pattern[nearestY * 7 + nearestX];
+                }
+                transformed[y * 7 + x] = value;
+            }
+        }
+        return transformed;
+    }
 }

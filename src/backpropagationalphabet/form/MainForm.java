@@ -1779,10 +1779,15 @@ public class MainForm extends javax.swing.JFrame implements BackPropagationInter
                 trainButton.setEnabled(false);
                 logDataField.setText("");
                 logDataField.append("Training dimulai...\n");
+                logDataField.append("Sampel: "
+                                + (AlphabetLibrary.ALPHABET_TRAINING.length
+                                                * AlphabetLibrary.TRAINING_VARIANTS_PER_LETTER)
+                                + " (" + AlphabetLibrary.TRAINING_VARIANTS_PER_LETTER + " per huruf).\n");
                 SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
                         @Override
                         protected Void doInBackground() {
-                                presenter.learn(AlphabetLibrary.ALPHABET_TRAINING, AlphabetLibrary.TARGET);
+                                presenter.learn(AlphabetLibrary.getTrainingInputs(),
+                                                AlphabetLibrary.getTrainingTargets());
                                 return null;
                         }
 

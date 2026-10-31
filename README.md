@@ -5,6 +5,7 @@ Aplikasi desktop Java Swing untuk mengenali pola huruf kapital A sampai Z menggu
 ## Gambaran aplikasi
 
 - Pola alfabet berukuran 7 kolom × 9 baris, sehingga setiap sampel memiliki 63 nilai input.
+- Training memakai 11 sampel deterministik per huruf (286 total): pola asli serta variasi geser, skala, dan kemiringan ringan.
 - Jaringan memakai satu hidden layer dengan 63 neuron dan 6 neuron output.
 - Nilai kotak hitam adalah `1`; nilai kotak putih adalah `-1`.
 - Data pola dan target alfabet berada di `AlphabetLibrary`.
@@ -59,5 +60,6 @@ Menu **Bantuan → Petunjuk & Credits** menampilkan petunjuk penggunaan di dalam
 ## Catatan
 
 - Inisialisasi bobot acak membuat hasil dapat sedikit berbeda pada setiap training.
+- Variasi training dibuat otomatis dari pola dasar, bukan dikumpulkan dari tulisan tangan banyak orang. Contoh input tulisan tangan nyata yang diberi label tetap dapat meningkatkan kemampuan mengenali gaya berbeda.
 - Bobot hasil training tidak disimpan ke file; menutup aplikasi berarti model perlu dilatih lagi.
 - Klasifikasi memilih target yang jarak kuadratnya paling dekat dengan enam output jaringan. Aplikasi selalu memilih salah satu huruf, sehingga pola yang bukan huruf tetap dapat memperoleh tebakan alfabet.

@@ -204,15 +204,18 @@ public class BackPropagationLibrary implements BackPropagationInterface.Presente
         if (input == null || target == null || input.length == 0 || input.length != target.length) {
             throw new IllegalArgumentException("Jumlah pola input dan target harus sama dan tidak kosong.");
         }
+        if (input[0] == null || target[0] == null) {
+            throw new IllegalArgumentException("Pola input dan target tidak boleh null.");
+        }
         int inputSize = input[0].length;
         int targetSize = target[0].length;
+        if (inputSize == 0 || targetSize != AlphabetLibrary.TARGET[0].length) {
+            throw new IllegalArgumentException("Ukuran pola input atau target tidak sesuai.");
+        }
         for (int i = 0; i < input.length; i++) {
             if (input[i] == null || input[i].length != inputSize || target[i] == null || target[i].length != targetSize) {
                 throw new IllegalArgumentException("Ukuran setiap pola input/target harus konsisten.");
             }
-        }
-        if (target.length != AlphabetLibrary.ALPHABET_STATUS.length) {
-            throw new IllegalArgumentException("Jumlah target harus sama dengan jumlah nama alfabet.");
         }
     }
 }
