@@ -1,409 +1,186 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Backpropagation network for the 7x9 alphabet patterns.
  */
 package backpropagationalphabet.lib;
 
-import java.util.Arrays;
-import javax.swing.JOptionPane;
-
 /**
- * A main library in Backpropagation application. 
- * This library is Require CoreVariable class to define more variable value in this class.
- * 
- * @author bayuirfan
+ * A one-hidden-layer bipolar sigmoid network (63 inputs, 63 hidden units,
+ * 6 output units). Training uses online backpropagation and runs the requested
+ * number of epochs. The target vectors in AlphabetLibrary are preserved.
  */
-public class BackPropagationLibrary implements BackPropagationInterface.Presenter{
-    private double[][] bobotInvisibleLayer, bobotOutputLayer;
-    private double[] biasInvisibleLayer, biasOutputLayer; 
-    private double[] hiddenLayerBefore, hiddenLayer, errHiddenLayer; 
-    private double[] outputLayerBefore, outputLayer, errOutputLayer;
-    private double[] deltaBobotOutputLayer, deltaBobotHiddenLayer;
-    private double[] deltaBiasOutputLayer, deltaBiasHiddenLayer;
-    private double alpha, theta;
-    private int epoch = 0, iteration = 0;
-    private final BackPropagationInterface.View contextBackPropagationInterface;
-    
-    /**
-     * Backpropagation library class constructor.
-     * @param contextBackPropagationInterface 
-     */
-    public BackPropagationLibrary(BackPropagationInterface.View contextBackPropagationInterface) {
-        this.contextBackPropagationInterface = contextBackPropagationInterface;        
+public class BackPropagationLibrary implements BackPropagationInterface.Presenter {
+    private double[][] inputHiddenWeights;
+    private double[][] hiddenOutputWeights;
+    private double[] hiddenBias;
+    private double[] outputBias;
+    private final BackPropagationInterface.View view;
+    private boolean trained;
+
+    public BackPropagationLibrary(BackPropagationInterface.View view) {
+        this.view = view;
     }
-    
-    /**
-     * Learn your pattern to this application. 
-     * This function is require CoreVariable class to define weight and more input variables 
-     * @param input
-     * @param target
-     */
+
     @Override
-    public void learn(double[][] input, double[][] target){
-        Boolean[] checkUpdate = new Boolean[input.length];
-        boolean check, isLoop;
-        bobotInvisibleLayer = CoreVariable.getBobotInvisibleLayer();
-        bobotOutputLayer = CoreVariable.getBobotOutputLayer();
-        biasInvisibleLayer = CoreVariable.getBiasInvisibleLayer();
-        biasOutputLayer = CoreVariable.getBiasOutputLayer();
-        contextBackPropagationInterface.showLogData(
-                "Bobot Invisible Generate : " + Arrays.toString(bobotInvisibleLayer)
-        );
-        contextBackPropagationInterface.showLogData(
-                "Bobot Output Generate : " + Arrays.toString(bobotOutputLayer)
-        );
-        contextBackPropagationInterface.showLogData(
-                "Bias Invisible Generate : " + Arrays.toString(biasInvisibleLayer)
-        );
-        contextBackPropagationInterface.showLogData(
-                "Bias Output Generate : " + Arrays.toString(biasOutputLayer)
-        );
-        hiddenLayerBefore = new double[biasInvisibleLayer.length];
-        hiddenLayer = new double[biasInvisibleLayer.length];
-        errHiddenLayer = new double[biasInvisibleLayer.length];
-        
-        outputLayerBefore = new double[biasOutputLayer.length];
-        outputLayer = new double[biasOutputLayer.length];
-        errOutputLayer = new double[biasOutputLayer.length];
-        
-        deltaBiasHiddenLayer = new double[63];
-        deltaBiasOutputLayer = new double[6];
-        
-        deltaBobotHiddenLayer = new double[63];
-        deltaBobotOutputLayer = new double[6];
-        
-        alpha = CoreVariable.ALPHA;
-        double max1, max2, maxFinal;
-        try{            
-            do{
-                if (iteration == input.length) {
-                    iteration = 0;
-                    epoch++;                    
-                }
-                contextBackPropagationInterface.showEpochData(epoch);
-                System.err.println("Pattern : " + (iteration + 1));
-                // Get Invisible Signal Value
-                for (int i = 0; i < input[iteration].length; i++) {
-                    hiddenLayerBefore[i] = countLayerSignal(input[iteration], bobotInvisibleLayer[iteration], biasInvisibleLayer[iteration]);                    
-                    hiddenLayer[i] = activationSigmoidBipolar(hiddenLayerBefore[i]);
+    public void learn(double[][] input, double[][] target) {
+        validateTrainingData(input, target);
+        int inputCount = input[0].length;
+        int hiddenCount = inputCount;
+        int outputCount = target[0].length;
+        double learningRate = CoreVariable.ALPHA;
+        int epochs = (int) CoreVariable.EPOCH;
+
+        if (epochs < 1 || CoreVariable.EPOCH != epochs) {
+            throw new IllegalArgumentException("Epoch harus berupa bilangan bulat positif.");
+        }
+        if (!(learningRate > 0.0) || Double.isInfinite(learningRate) || Double.isNaN(learningRate)) {
+            throw new IllegalArgumentException("Learning rate harus lebih besar dari 0.");
+        }
+
+        initializeWeights(inputCount, hiddenCount, outputCount);
+        double[] hidden = new double[hiddenCount];
+        double[] output = new double[outputCount];
+        double[] outputDelta = new double[outputCount];
+        double[] hiddenDelta = new double[hiddenCount];
+
+        for (int epoch = 1; epoch <= epochs; epoch++) {
+            double squaredError = 0.0;
+            for (int pattern = 0; pattern < input.length; pattern++) {
+                forward(input[pattern], hidden, output);
+
+                for (int k = 0; k < outputCount; k++) {
+                    double difference = target[pattern][k] - output[k];
+                    squaredError += difference * difference;
+                    outputDelta[k] = difference * bipolarDerivativeFromOutput(output[k]);
                 }
 
-                //Show Log Hidden Layer Data
-                contextBackPropagationInterface.showLogData(
-                        "Hidden Layer Before Data : " + Arrays.toString(hiddenLayerBefore)
-                );
-                System.out.println(
-                        "Hidden Layer Before Data : " + Arrays.toString(hiddenLayerBefore)
-                );
-                contextBackPropagationInterface.showLogData(
-                        "Hidden Layer Data after activation : " + Arrays.toString(hiddenLayer)
-                );
-                System.out.println(
-                        "Hidden Layer Data after activation : " + Arrays.toString(hiddenLayer)
-                );
-
-                //Get Output Signal Value
-                for (int j = 0; j < target[iteration].length; j++) {
-                    outputLayerBefore[j] = countLayerSignal(hiddenLayer, bobotOutputLayer[j], biasOutputLayer[j]);
-                    outputLayer[j] = activationSigmoidBipolar(outputLayerBefore[j]);
-                }
-
-                //Show Log Output Layer Data
-                contextBackPropagationInterface.showLogData(
-                        "Output Layer Before Data : " + Arrays.toString(outputLayerBefore)
-                );
-                System.out.println(
-                        "Output Layer Before Data : " + Arrays.toString(outputLayerBefore)
-                );
-                contextBackPropagationInterface.showLogData(
-                        "Output Layer Data after activation : " + Arrays.toString(outputLayer)
-                );
-                System.out.println(
-                        "Output Layer Data after activation : " + Arrays.toString(outputLayer)
-                );
-
-                //Count error, delta W, and delta Bias on Output Layer
-                errOutputLayer = countErrorOutputLayer(outputLayer, target[iteration], outputLayerBefore);
-                deltaBobotOutputLayer = countDeltaBobotOutputLayer(outputLayerBefore, errOutputLayer);
-                deltaBiasOutputLayer = countDeltaBiasOutputLayer(errOutputLayer);
-                updateBobotOutputLayer(bobotOutputLayer, deltaBobotOutputLayer);
-                updateBiasOutputLayer(biasOutputLayer, deltaBiasOutputLayer);
-                
-                //Count error, delta W and delta Bias on Hidden Layer
-                errHiddenLayer = countErrorHiddenLayer(errOutputLayer, bobotOutputLayer[iteration], hiddenLayerBefore);
-                deltaBobotHiddenLayer = countDeltaBobotHiddenLayer(errHiddenLayer, input[iteration]);
-                deltaBiasHiddenLayer = countDeltaBiasHiddenLayer(errHiddenLayer);
-                updateBobotHiddenLayer(bobotInvisibleLayer, deltaBobotHiddenLayer);
-                updateBiasInvisibleLayer(biasInvisibleLayer, deltaBiasHiddenLayer);
-                
-                max1 = Arrays.stream(errOutputLayer).max().getAsDouble();
-                max2 = Arrays.stream(errHiddenLayer).max().getAsDouble();
-                                
-                double[] maxErr = {
-                    max1, max2
-                };
-                maxFinal = Arrays.stream(maxErr).max().getAsDouble();
-                
-                //Show max error value
-                contextBackPropagationInterface.showErrorData(maxFinal);
-                check = outputLayer != target[iteration];
-                checkUpdate[iteration] = check;
-                
-                //Check break if condition
-                if (maxFinal <= CoreVariable.THETA) {
-                    break;
-                }
-                else {
-                    isLoop = Arrays.stream(checkUpdate).noneMatch(val -> val);
-                    contextBackPropagationInterface.showLogData("Is Activation same with target? : " + isLoop);
-                    System.err.println("Checking Array : " + Arrays.toString(checkUpdate));
-                    if (isLoop) {
-                        contextBackPropagationInterface.showLogData("Finished");
-                        break;
+                // Calculate hidden deltas before changing the output weights.
+                for (int j = 0; j < hiddenCount; j++) {
+                    double propagatedError = 0.0;
+                    for (int k = 0; k < outputCount; k++) {
+                        propagatedError += outputDelta[k] * hiddenOutputWeights[k][j];
                     }
+                    hiddenDelta[j] = propagatedError * bipolarDerivativeFromOutput(hidden[j]);
                 }
-                
-                iteration++;
-            }while(epoch != CoreVariable.EPOCH);
+
+                for (int k = 0; k < outputCount; k++) {
+                    for (int j = 0; j < hiddenCount; j++) {
+                        hiddenOutputWeights[k][j] += learningRate * outputDelta[k] * hidden[j];
+                    }
+                    outputBias[k] += learningRate * outputDelta[k];
+                }
+                for (int j = 0; j < hiddenCount; j++) {
+                    for (int i = 0; i < inputCount; i++) {
+                        inputHiddenWeights[j][i] += learningRate * hiddenDelta[j] * input[pattern][i];
+                    }
+                    hiddenBias[j] += learningRate * hiddenDelta[j];
+                }
+            }
+
+            double meanSquaredError = squaredError / (input.length * outputCount);
+            view.showEpochData(epoch);
+            view.showErrorData(meanSquaredError);
+            // Limit UI/log overhead: one concise line per epoch, no per-weight dump.
+            view.showLogData("Epoch " + epoch + "/" + epochs + " - MSE: " + meanSquaredError + "\n");
         }
-        catch(IndexOutOfBoundsException e){
-            JOptionPane.showMessageDialog(null, e.toString());
-            System.err.println(e.toString());
-        }
+        trained = true;
+        view.showLogData("Training selesai pada epoch " + epochs + ".\n");
     }
-    
-    /**
-     * Test your input is same with target (this function used after learning process)
-     * @param input
-     */
+
     @Override
-    public void test(double[] input){
-        try{
+    public void test(double[] input) {
+        if (!trained || input == null || inputHiddenWeights == null || input.length != inputHiddenWeights[0].length) {
+            view.showResult("Unknown");
+            return;
+        }
+        double[] hidden = new double[hiddenBias.length];
+        double[] output = new double[outputBias.length];
+        forward(input, hidden, output);
+        view.showResult(classify(output));
+    }
+
+    private void forward(double[] input, double[] hidden, double[] output) {
+        for (int j = 0; j < hidden.length; j++) {
+            double sum = hiddenBias[j];
             for (int i = 0; i < input.length; i++) {
-                hiddenLayerBefore[i] = countLayerSignal(input, bobotInvisibleLayer[i], biasInvisibleLayer[i]);
-                hiddenLayer[i] = activationSigmoidBipolar(hiddenLayerBefore[i]);
+                sum += inputHiddenWeights[j][i] * input[i];
             }
-            for (int i = 0; i < biasOutputLayer.length; i++) {
-                outputLayerBefore[i] = countLayerSignal(hiddenLayer, bobotOutputLayer[i], biasOutputLayer[i]);
-                outputLayer[i] = activationSigmoidBipolar(outputLayerBefore[i]);
+            hidden[j] = bipolarSigmoid(sum);
+        }
+        for (int k = 0; k < output.length; k++) {
+            double sum = outputBias[k];
+            for (int j = 0; j < hidden.length; j++) {
+                sum += hiddenOutputWeights[k][j] * hidden[j];
             }
-            System.out.println(Arrays.toString(outputLayer));
-            contextBackPropagationInterface.showResult(isSameWithTarget(outputLayer));
-        }
-        catch(Exception e){
-            JOptionPane.showMessageDialog(null, e.toString());
-            System.err.println(e.toString());
+            output[k] = bipolarSigmoid(sum);
         }
     }
-    
-    /**
-     * A function to get value on the layer process
-     * @param input
-     * @param bobot
-     * @param bias
-     * @return 
-     */
-    private double countLayerSignal(double[] input, double[] bobot, double bias){
-        double temp = 0;
-        for (int i = 0; i < bobot.length; i++) {
-            temp = temp + (input[i] * bobot[i]);
-        }        
-        return bias + temp;
-    }
-    
-    /**
-     * Count error of the training process on the Output Layer
-     * @param outputLayer
-     * @param target
-     * @param outputLayerBefore
-     * @return 
-     */
-    private double[] countErrorOutputLayer(double[] outputLayer, double[] target, double[] outputLayerBefore){
-        double[] err = new double[outputLayer.length];
-        for (int i = 0; i < target.length; i++) {
-            err[i] = (target[i] - outputLayer[i]) * derivativeActivationSigmoidBipolar(outputLayerBefore[i]);
-        }
-        return err;
-    }
-    
-    /**
-     * Count error of the training process on the Hidden Layer
-     * @param errOutputLayer
-     * @param bobotOutputLayer
-     * @param hiddenLayerBefore
-     * @return 
-     */
-    private double[] countErrorHiddenLayer(double[] errOutputLayer, double[] bobotOutputLayer, double[] hiddenLayerBefore){
-        double[] err = new double[hiddenLayerBefore.length];
-        double sum = 0;
-        for (int i = 0; i < errOutputLayer.length; i++) {
-            sum = sum + (errOutputLayer[i] * bobotOutputLayer[i]);
-        }
-        for (int i = 0; i < hiddenLayerBefore.length; i++) {
-            err[i] = sum * derivativeActivationSigmoidBipolar(hiddenLayerBefore[i]);
-        }
-        return err;
-    }
-    
-    /**
-     * Count delta W of Output Layer
-     * @param outputLayerBefore
-     * @param errOutputLayer
-     * @return 
-     */
-    private double[] countDeltaBobotOutputLayer(double[] outputLayerBefore, double[] errOutputLayer){
-        double[] deltaBobot;
-        deltaBobot = new double[6];
-        for (int i = 0; i < deltaBobot.length; i++) {
-                deltaBobot[i] = CoreVariable.ALPHA * errOutputLayer[i] * outputLayerBefore[i];
-        }
-        return deltaBobot;
-    }
-    
-    /**
-     * Count delta Bias of Output Layer
-     * @param errOutputLayer
-     * @return 
-     */
-    private double[] countDeltaBiasOutputLayer(double[] errOutputLayer){
-        double[] deltaBias = new double[errOutputLayer.length];
-        for (int i = 0; i < errOutputLayer.length; i++) {
-            deltaBias[i] = CoreVariable.ALPHA * errOutputLayer[i];            
-        }
-        return deltaBias;
-    }
-    
-    /**
-     * Count delta W of Hidden Layer
-     * @param errHiddenLayer
-     * @param input
-     * @return 
-     */
-    private double[] countDeltaBobotHiddenLayer(double[] errHiddenLayer, double[] input){
-        double[] deltaBobot;
-        deltaBobot = new double[63];
-        for (int i = 0; i < deltaBobot.length; i++) {
-                deltaBobot[i] = CoreVariable.ALPHA * errHiddenLayer[i] * input[i];   
-        }
-        return deltaBobot;
-    }
-    
-    /**
-     * Count delta Bias of Hidden Layer
-     * @param errHiddenLayer
-     * @return 
-     */
-    private double[] countDeltaBiasHiddenLayer(double[] errHiddenLayer){
-        double[] deltaBias = new double[errHiddenLayer.length];
-        for (int i = 0; i < errHiddenLayer.length; i++) {
-            deltaBias[i] = CoreVariable.ALPHA * errHiddenLayer[i];            
-        }
-        return deltaBias;
-    }
-    
-    /**
-     * Update W to Output Layer
-     * @param bobotOutputLayer
-     * @param deltaBobotOutput
-     * @return 
-     */
-    private void updateBobotOutputLayer(double[][] bobotOutputLayer, double[] deltaBobotOutput){
-        for (int i = 0; i < bobotOutputLayer.length; i++) {
-            for (int j = 0; j < bobotOutputLayer[i].length; j++) {
-                bobotOutputLayer[i][j] = bobotOutputLayer[i][j] + deltaBobotOutput[j];
-            }            
-        }
-        contextBackPropagationInterface.showLogData(
-                        "Update Bobot Output Layer : " + String.valueOf(Arrays.stream(bobotOutputLayer).toString())
-                );
-    }
-    
-    /**
-     * Update bias in Output Layer
-     * @param biasOutputLayer
-     * @param deltaBiasOutputLayer 
-     */
-    private void updateBiasOutputLayer(double[] biasOutputLayer, double[] deltaBiasOutputLayer){
-        for (int i = 0; i < biasOutputLayer.length; i++) {
-            biasOutputLayer[i] = biasOutputLayer[i] + deltaBiasOutputLayer[i];
-            
-        }
-    }
-    
-    /**
-     * Update bias in Hidden Layer
-     * @param biasInvisibleLayer
-     * @param deltaBiasInvisibleLayer 
-     */
-    private void updateBiasInvisibleLayer(double[] biasInvisibleLayer, double[] deltaBiasInvisibleLayer){
-        for (int i = 0; i < biasInvisibleLayer.length; i++) {
-            biasInvisibleLayer[i] = biasInvisibleLayer[i] + deltaBiasInvisibleLayer[i];
-            
-        }
-    }
-    
-    /**
-     * Update W to Hidden Layer
-     * @param bobotHiddenLayer
-     * @param deltaBobotHidden
-     * @return 
-     */
-    private void updateBobotHiddenLayer(double[][] bobotHiddenLayer, double[] deltaBobotHidden){
-        for (int i = 0; i < bobotHiddenLayer.length; i++) {
-            for (int j = 0; j < bobotHiddenLayer[i].length; j++) {
-                bobotHiddenLayer[i][j] = bobotHiddenLayer[i][j] + deltaBobotHidden[j];
-            }            
-        }
-        contextBackPropagationInterface.showLogData(
-                        "Update Bobot Hidden Layer : " + String.valueOf(Arrays.stream(bobotHiddenLayer).toString())
-                );
-    }
-    /**
-    * A activation function to get output value with sigmoid binary
-    * @params input
-    */
-    private double activationSigmoidBinary(double input){
-         return 1 / (1 + (Math.exp(-input)));        
-    }
-    
-    /**
-    * A derivative activation function to get output value with sigmoid binary
-    * @params input
-    */
-    private double derivativeActivationSigmoidBinary(double input){
-        return activationSigmoidBinary(input) * (1 - activationSigmoidBinary(input));
-    }
-    
-    /**
-    * A activation function to get output value with sigmoid bipolar
-    * @params input
-    */
-    private double activationSigmoidBipolar(double input){
-        return (2 * activationSigmoidBinary(input)) - 1;
-    }
-    
-    /**
-    * A derivative activation function to get output value with sigmoid bipolar
-    * @params input
-    */
-    private double derivativeActivationSigmoidBipolar(double input){
-        return ((1 + activationSigmoidBipolar(input)) * 1 - activationSigmoidBipolar(input)) / 2;
-    }
-    
-    /**
-     * a function to check is the input is same with the target after activation
-     * @param input
-     * @return 
-     */
-    private String isSameWithTarget(double[] input){
-        String value = "Unknown";
-        for (int i = 0; i < 26; i++) {
-            if (input == AlphabetLibrary.TARGET[i]) {
-                value = AlphabetLibrary.ALPHABET_STATUS[i];
-                break;
+
+    private String classify(double[] output) {
+        // The network outputs continuous sigmoid values, so select the closest
+        // bipolar target instead of comparing Java arrays or doubles exactly.
+        int best = -1;
+        double bestDistance = Double.POSITIVE_INFINITY;
+        for (int pattern = 0; pattern < AlphabetLibrary.TARGET.length; pattern++) {
+            double distance = 0.0;
+            for (int k = 0; k < output.length; k++) {
+                double difference = output[k] - AlphabetLibrary.TARGET[pattern][k];
+                distance += difference * difference;
+            }
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                best = pattern;
             }
         }
-        return value;
+        return best >= 0 ? AlphabetLibrary.ALPHABET_STATUS[best] : "Unknown";
+    }
+
+    private void initializeWeights(int inputCount, int hiddenCount, int outputCount) {
+        inputHiddenWeights = new double[hiddenCount][inputCount];
+        hiddenOutputWeights = new double[outputCount][hiddenCount];
+        hiddenBias = new double[hiddenCount];
+        outputBias = new double[outputCount];
+        initialize(inputHiddenWeights);
+        initialize(hiddenOutputWeights);
+        initialize(hiddenBias);
+        initialize(outputBias);
+    }
+
+    private void initialize(double[][] weights) {
+        for (int row = 0; row < weights.length; row++) {
+            for (int column = 0; column < weights[row].length; column++) {
+                // Small symmetric values reduce initial sigmoid saturation.
+                weights[row][column] = (Math.random() - 0.5) * 0.2;
+            }
+        }
+    }
+
+    private void initialize(double[] values) {
+        for (int i = 0; i < values.length; i++) {
+            values[i] = (Math.random() - 0.5) * 0.2;
+        }
+    }
+
+    private double bipolarSigmoid(double value) {
+        return 2.0 / (1.0 + Math.exp(-value)) - 1.0;
+    }
+
+    private double bipolarDerivativeFromOutput(double output) {
+        return 0.5 * (1.0 - output * output);
+    }
+
+    private void validateTrainingData(double[][] input, double[][] target) {
+        if (input == null || target == null || input.length == 0 || input.length != target.length) {
+            throw new IllegalArgumentException("Jumlah pola input dan target harus sama dan tidak kosong.");
+        }
+        int inputSize = input[0].length;
+        int targetSize = target[0].length;
+        for (int i = 0; i < input.length; i++) {
+            if (input[i] == null || input[i].length != inputSize || target[i] == null || target[i].length != targetSize) {
+                throw new IllegalArgumentException("Ukuran setiap pola input/target harus konsisten.");
+            }
+        }
+        if (target.length != AlphabetLibrary.ALPHABET_STATUS.length) {
+            throw new IllegalArgumentException("Jumlah target harus sama dengan jumlah nama alfabet.");
+        }
     }
 }
